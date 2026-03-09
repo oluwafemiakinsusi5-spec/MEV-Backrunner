@@ -1,5 +1,11 @@
 # Node modules
 /node_modules
+.env
+.env.local
+
+# 🔐 SECRETS - NEVER COMMIT THESE!
+.secrets.enc
+.secrets.key
 
 # Compilation output
 /dist
@@ -18,3 +24,4 @@
 
 # Hardhat coverage reports
 /coverage
+

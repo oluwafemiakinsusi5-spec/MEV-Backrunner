@@ -5,6 +5,7 @@ import * as confirmationMonitor from "./confirmation-monitor.ts";
 import * as backrunExecutor from "./backrun-executor.ts";
 import * as priceOracle from "./price-oracle.ts";
 import * as sandwichDetector from "./sandwich-detector.ts";
+import { loadSecret } from "./secrets-loader.ts";
 
 /**
  * MEV Listener - DEX Swap Monitor
@@ -818,11 +819,17 @@ async function main() {
   }
 
   // Initialize wallet if backrun is enabled
-  if (BACKRUN_ENABLED && config.privateKey) {
-    const { getHttpProvider } = await import("./provider.ts");
-    const httpProvider = getHttpProvider();
-    wallet = new ethers.Wallet(config.privateKey, httpProvider);
-    console.log("🔑 Backrun wallet initialized:", wallet.address);
+  if (BACKRUN_ENABLED) {
+    const privateKey = loadSecret("PRIVATE_KEY");
+    if (privateKey) {
+      const { getHttpProvider } = await import("./provider.ts");
+      const httpProvider = getHttpProvider();
+      wallet = new ethers.Wallet(privateKey, httpProvider);
+      console.log("🔑 Backrun wallet initialized:", wallet.address);
+    } else {
+      console.warn("⚠️  PRIVATE_KEY not found. Backrun will be disabled.");
+      BACKRUN_ENABLED = false;
+    }
   }
   
   console.log(`

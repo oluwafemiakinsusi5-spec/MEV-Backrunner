@@ -1,13 +1,14 @@
 {
-  "name": "mev-bot",
+  "name": "mev-backrunner",
   "version": "1.0.0",
-  "description": "",
+  "description": "MEV Backrunner Bot - Detects and executes MEV backrun opportunities on Polygon",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "compile": "hardhat compile",
     "deploy": "hardhat run scripts/deploy-backrun.ts --network polygon",
     "mempool": "ts-node scripts/mempool-listener.ts",
+    "start": "ts-node scripts/mempool-listener.ts",
     "analytics": "ts-node scripts/analytics.ts"
   },
   "keywords": [],

@@ -1,6 +1,7 @@
 import "dotenv/config";
 import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 import { configVariable, defineConfig } from "hardhat/config";
+import { loadSecret } from "./scripts/secrets-loader.ts";
 
 export default defineConfig({
   plugins: [hardhatToolboxMochaEthersPlugin],
@@ -70,9 +71,10 @@ export default defineConfig({
       type: "http",
       chainType: "l1",
       url: configVariable("SEPOLIA_RPC_URL"),
-      accounts: process.env.SEPOLIA_PRIVATE_KEY
-        ? [process.env.SEPOLIA_PRIVATE_KEY]
-        : [],
+      accounts: (() => {
+        const key = loadSecret("SEPOLIA_PRIVATE_KEY") || process.env.SEPOLIA_PRIVATE_KEY;
+        return key ? [key] : [];
+      })(),
     },
 
     // 🚨 REAL POLYGON (ONLY USE WHEN READY)
@@ -83,9 +85,10 @@ export default defineConfig({
         process.env.ALCHEMY_HTTP_URL ||
         process.env.POLYGON_RPC_URL ||
         "https://polygon-rpc.com",
-      accounts: process.env.PRIVATE_KEY
-        ? [process.env.PRIVATE_KEY]
-        : [],
+      accounts: (() => {
+        const key = loadSecret("PRIVATE_KEY") || process.env.PRIVATE_KEY;
+        return key ? [key] : [];
+      })(),
     },
   },
 });

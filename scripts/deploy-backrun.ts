@@ -4,6 +4,7 @@
  */
 
 import { ethers } from "ethers";
+import { loadSecret } from "./secrets-loader.ts";
 
 async function main() {
   console.log("🚀 Deploying BackrunExecutor contract...");
@@ -130,8 +131,9 @@ async function main() {
     // Use explicit PRIVATE_KEY when provided; otherwise attempt to use an unlocked
     // account exposed by the JSON-RPC node (useful when running a local Hardhat node).
     let signer: any;
-    if (process.env.PRIVATE_KEY) {
-      signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+    const privateKey = loadSecret("PRIVATE_KEY");
+    if (privateKey) {
+      signer = new ethers.Wallet(privateKey, provider);
     } else {
       try {
         const accounts: string[] = await provider.send("eth_accounts", []);

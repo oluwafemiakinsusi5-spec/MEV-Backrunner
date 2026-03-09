@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import "dotenv/config";
+import { loadSecret } from "./secrets-loader.ts";
 
 /**
  * Testnet Testing Suite for MEV Bot
@@ -67,7 +68,8 @@ export async function testFlashLoanMechanics() {
 
   try {
     const httpProvider = new ethers.JsonRpcProvider(TESTNET_CONFIG.httpUrl);
-    const wallet = new ethers.Wallet(TESTNET_CONFIG.privateKey, httpProvider);
+    const privateKey = loadSecret("TESTNET_PRIVATE_KEY") || TESTNET_CONFIG.privateKey;
+    const wallet = new ethers.Wallet(privateKey, httpProvider);
 
     // Check Aave pool balance of token
     const aavePoolABI = ["function balanceOf(address) view returns (uint)"];
@@ -159,7 +161,8 @@ export async function testWalletStatus() {
 
   try {
     const httpProvider = new ethers.JsonRpcProvider(TESTNET_CONFIG.httpUrl);
-    const wallet = new ethers.Wallet(TESTNET_CONFIG.privateKey, httpProvider);
+    const privateKey = loadSecret("TESTNET_PRIVATE_KEY") || TESTNET_CONFIG.privateKey;
+    const wallet = new ethers.Wallet(privateKey, httpProvider);
 
     const balance = await httpProvider.getBalance(wallet.address);
     const nonce = await httpProvider.getTransactionCount(wallet.address);
@@ -303,8 +306,9 @@ export async function runAllTests() {
   `);
 
   // Validate config
-  if (!TESTNET_CONFIG.privateKey) {
-    console.error("❌ TESTNET_PRIVATE_KEY not set in .env");
+  const testnetPrivateKey = loadSecret("TESTNET_PRIVATE_KEY") || TESTNET_CONFIG.privateKey;
+  if (!testnetPrivateKey) {
+    console.error("❌ TESTNET_PRIVATE_KEY not found (not in encrypted storage or .env");
     process.exit(1);
   }
 

@@ -1,10 +1,14 @@
 import { ethers } from "ethers";
 import "dotenv/config";
+import { loadSecret } from "./secrets-loader.ts";
 
 /**
  * Private Transaction Support
  * Sends transactions via private mempools to avoid front-running
  * Supports: MEV-blocker, Flashbots Relay, MEV-Protect
+ *
+ * Security: Private keys are loaded from encrypted secrets storage
+ * and never passed as string parameters
  */
 
 export interface PrivateTxConfig {
@@ -79,7 +83,18 @@ export class FlashbotsRelay {
   private relayUrl = "https://relay.flashbots.net";
   private authSigner: ethers.Wallet;
 
-  constructor(privateKey: string) {
+  constructor(privateKey?: string) {
+    // If no key provided, load from encrypted storage
+    if (!privateKey) {
+      const key = loadSecret("PRIVATE_KEY");
+      if (!key) {
+        throw new Error(
+          "PRIVATE_KEY not found in encrypted storage or environment. Run: npx ts-node scripts/init-secrets.ts"
+        );
+      }
+      privateKey = key;
+      console.log("🔐 Loaded PRIVATE_KEY from encrypted storage");
+    }
     this.authSigner = new ethers.Wallet(privateKey);
   }
 
@@ -223,10 +238,7 @@ export class PrivateTransactionManager {
   private mevProtect: MEVProtect;
   private preferredProvider: string;
 
-  constructor(
-    privateKey: string,
-    preferredProvider: string = "mev-blocker"
-  ) {
+  constructor(privateKey?: string, preferredProvider: string = "mev-blocker") {
     this.mevBlocker = new MEVBlocker();
     this.flashbots = new FlashbotsRelay(privateKey);
     this.mevProtect = new MEVProtect();
@@ -358,7 +370,7 @@ export async function executeBackrunWithPrivacy(
     const signedTx = await wallet.signTransaction(tx as ethers.TransactionRequest);
 
     if (usePrivateTx) {
-      const manager = new PrivateTransactionManager(wallet.privateKey, privateTxProvider);
+      const manager = new PrivateTransactionManager(undefined, privateTxProvider);
       const blockNumber = await wallet.provider!.getBlockNumber();
 
       try {
